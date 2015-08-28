@@ -2,7 +2,8 @@
 	"name": "sysbind/lti",
 	"description" : "LTI provider",
 	"keywords" : ["LTI provider","SysBind"],
-	"licens" : "Apache-2.0",
+	"license" : "Apache-2.0",
+	"type" : "library",
 	"authors": [
         {
             "name": "SysBind",
