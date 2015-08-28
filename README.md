@@ -5,5 +5,5 @@
 Install the latest version with
 
 ```bash
-$ composer require monolog/monolog
+$ composer require sysbind/lti
 ```
