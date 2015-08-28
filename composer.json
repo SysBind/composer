@@ -10,7 +10,7 @@
             "email": "service@sysbind.co.il"
         }
     ],
-    "version": "0.0.1",
+    "version": "0.1.0",
     "require": {
         "php": ">=5.3.0"
     },
