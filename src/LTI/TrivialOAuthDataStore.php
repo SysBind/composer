@@ -3,6 +3,8 @@ namespace LTI;
 
 use LTI\oauth\OAuthDataStore;
 use LTI\oauth\OAuthConsumer;
+use LTI\oauth\OAuthToken;
+
 
 class TrivialOAuthDataStore extends OAuthDataStore
 {
@@ -14,7 +16,7 @@ class TrivialOAuthDataStore extends OAuthDataStore
      * @param unknown $consumer_key
      * @param unknown $consumer_secret
      */
-    function add_consumer($consumer_key, $consumer_secret)
+    public function add_consumer($consumer_key, $consumer_secret)
     {
         $this->consumers[$consumer_key] = $consumer_secret;
     }
@@ -59,7 +61,7 @@ class TrivialOAuthDataStore extends OAuthDataStore
         // Should add some clever logic to keep nonces from
         // being reused - for no we are really trusting
         // that the timestamp will save us
-        return NULL;
+        return !apc_add($consumer . $timestamp , $nonce,1800);
     }
 
     /**

@@ -22,7 +22,7 @@ class BLTI
 
     public $context_id = false;
  // Override context_id
-    function __construct($parm = false, $usesession = true, $doredirect = true)
+    function __construct($parm = false, $usesession = true, $doredirect = true, \PDO $pdo)
     {
         // If this request is not an LTI Launch, either
         // give up or try to retrieve the context from session
@@ -67,18 +67,19 @@ class BLTI
                 $this->message = "Constructor requires a secret or database information.";
                 return;
             } else {
-                $sql = 'SELECT * FROM ' . $parm['table'] . ' WHERE ' . ($parm['key_column'] ? $parm['key_column'] : 'oauth_consumer_key') . '=' . "'" . mysql_real_escape_string($oauth_consumer_key) . "'";
-                $result = mysql_query($sql);
-                $num_rows = mysql_num_rows($result);
+                $sql = 'SELECT * FROM ' . $parm['table'] . ' WHERE ' . (isset($parm['key_column']) ? $parm['key_column'] : 'oauth_consumer_key') . '='  . $pdo->quote($oauth_consumer_key) ;
+                $result = $pdo->query($sql);
+                $num_rows = $result->rowCount();
                 if ($num_rows != 1) {
                     $this->message = "Your consumer is not authorized oauth_consumer_key=" . $oauth_consumer_key;
                     return;
                 } else {
-                    while ($row = mysql_fetch_assoc($result)) {
-                        $secret = $row[$parms['secret_column'] ? $parms['secret_column'] : 'secret'];
-                        $context_id = $row[$parms['context_column'] ? $parms['context_column'] : 'context_id'];
-                        if ($context_id)
+                    while ($row = $result->fetch(\PDO::FETCH_ASSOC)) {
+                        $secret = $row[isset($parm['secret_column']) ? $parm['secret_column'] : 'secret'];
+                        $context_id = $row[isset($parm['context_column']) ? $parm['context_column'] : 'context_id'];
+                        if ($context_id) {
                             $this->context_id = $context_id;
+                        }
                         $this->row = $row;
                         break;
                     }
@@ -257,7 +258,7 @@ class BLTI
     function redirect() {
         $host = $_SERVER['HTTP_HOST'];
         $uri = $_SERVER['PHP_SELF'];
-        $location = $_SERVER['HTTPS'] ? 'https://' : 'http://';
+        $location = isset($_SERVER['HTTPS']) ? 'https://' : 'http://';
         $location = $location . $host . $uri;
         $location = $this->addSession($location);
         header("Location: $location");

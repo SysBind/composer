@@ -2,7 +2,7 @@
 namespace LTI\oauth;
 
 
-class OAuthException extends Exception
+class OAuthException extends \Exception
 {
     
 }
