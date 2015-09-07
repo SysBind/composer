@@ -1,16 +1,63 @@
 <?php
+/**
+ * SysBind LTI provider (http://sysbind.co.il/)
+ *
+ * @link      https://github.com/SysBind/composer for the canonical source repository
+ */
 namespace LTI\oauth;
 
+/**
+ * Class represent the OAuth request via http
+ * 
+ * @author SysBind
+ *
+ */
 class OAuthRequest
 {
+    /**
+     * 
+     * @var array $parameters OAuth request parameters 
+     */
     private $parameters;
+    
+    /**
+     * 
+     * @var string $http_method the http method type
+     */
     private $http_method;
+    
+    /**
+     * 
+     * @var string $http_url the http 
+     */
     private $http_url;
-    // for debug purposes
+    
+    
+    /**
+     * 
+     * @var string $base_string base string for the signature
+     */
     public $base_string;
+    
+    /**
+     * 
+     * @var string $version the version number
+     */
     public static $version = '1.0';
+    
+    /**
+     * 
+     * @var string $POST_INPUT for post input request
+     */
     public static $POST_INPUT = 'php://input';
     
+    /**
+     * Constructor
+     * 
+     * @param string $http_method
+     * @param string $http_url
+     * @param string $parameters
+     */
     function __construct($http_method, $http_url, $parameters=NULL)
     {
         @$parameters or $parameters = array();
@@ -21,6 +68,11 @@ class OAuthRequest
     
     /**
      * attempt to build up a request from what was passed to the server
+     * 
+     * @param string $http_method
+     * @param string $http_url
+     * @param string $parameters
+     * @return \LTI\oauth\OAuthRequest
      */
     public static function from_request($http_method=NULL, $http_url=NULL, $parameters=NULL) {
         $scheme = (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] != "on")
@@ -77,6 +129,13 @@ class OAuthRequest
     
     /**
      * pretty much a helper function to set up the request
+     * 
+     * @param OAuthConsumer $consumer
+     * @param OAuthToken $token
+     * @param string $http_method
+     * @param string $http_url
+     * @param string $parameters
+     * @return \LTI\oauth\OAuthRequest
      */
     public static function from_consumer_and_token($consumer, $token, $http_method, $http_url, $parameters=NULL) {
         @$parameters or $parameters = array();
@@ -100,6 +159,13 @@ class OAuthRequest
         return new OAuthRequest($http_method, $http_url, $parameters);
     }
     
+    /**
+     * set parameters for the OAuth request
+     * 
+     * @param string $name
+     * @param mixed $value
+     * @param string $allow_duplicates
+     */
     public function set_parameter($name, $value, $allow_duplicates = true) {
         if ($allow_duplicates && isset($this->parameters[$name])) {
             // We have already added parameter(s) with this name, so add to the list
@@ -115,20 +181,37 @@ class OAuthRequest
         }
     }
     
+    /**
+     * get OAuth request parameter by name
+     * 
+     * @param string $name
+     * @return Ambigous <NULL, unknown>
+     */
     public function get_parameter($name) {
         return isset($this->parameters[$name]) ? $this->parameters[$name] : null;
     }
     
+    /**
+     * get all the OAuth request parameters
+     * 
+     * @return array
+     */
     public function get_parameters() {
         return $this->parameters;
     }
     
+    /**
+     * delete parameter from the OAuth request
+     * 
+     * @param string $name
+     */
     public function unset_parameter($name) {
         unset($this->parameters[$name]);
     }
     
     /**
      * The request parameters, sorted and concatenated into a normalized string.
+     * 
      * @return string
      */
     public function get_signable_parameters() {
@@ -150,6 +233,8 @@ class OAuthRequest
      * The base string defined as the method, the url
      * and the parameters (normalized), each urlencoded
      * and the concated with &.
+     * 
+     * @return string
      */
     public function get_signature_base_string() {
         $parts = array(
@@ -165,14 +250,18 @@ class OAuthRequest
     
     /**
      * just uppercases the http method
+     * 
+     * @return string
      */
     public function get_normalized_http_method() {
         return strtoupper($this->http_method);
     }
-    
+
     /**
      * parses the url and rebuilds it to be
      * scheme://host/path
+     * 
+     * @return string
      */
     public function get_normalized_http_url() {
         $parts = parse_url($this->http_url);
@@ -190,9 +279,11 @@ class OAuthRequest
             }
             return "$scheme://$host$path";
     }
-    
+
     /**
      * builds a url usable for a GET request
+     * 
+     * @return string
      */
     public function to_url() {
         $post_data = $this->to_postdata();
@@ -202,9 +293,11 @@ class OAuthRequest
         }
         return $out;
     }
-    
+
     /**
      * builds the data one would send in a POST request
+     * 
+     * @return string
      */
     public function to_postdata() {
         return OAuthUtil::build_http_query($this->parameters);
@@ -212,6 +305,9 @@ class OAuthRequest
     
     /**
      * builds the Authorization: header
+     * 
+     * @throws OAuthException
+     * @return string
      */
     public function to_header() {
         $out ='Authorization: OAuth realm=""';
@@ -230,11 +326,22 @@ class OAuthRequest
         return $out;
     }
     
+    /**
+     * Return url as string
+     * 
+     * @return string
+     */
     public function __toString() {
         return $this->to_url();
     }
     
-    
+    /**
+     * sign the OAuth request
+     * 
+     * @param OAuthSignatureMethod $signature_method
+     * @param OAuthConsumer $consumer
+     * @param OAuthToken $token
+     */
     public function sign_request($signature_method, $consumer, $token) {
         $this->set_parameter(
             "oauth_signature_method",
@@ -245,13 +352,23 @@ class OAuthRequest
         $this->set_parameter("oauth_signature", $signature, false);
     }
     
+    /**
+     * Build the OAuth signature based on the signature method
+     * 
+     * @param OAuthSignatureMethod $signature_method
+     * @param OAuthConsumer $consumer
+     * @param OAuthToken $token
+     * @return string
+     */
     public function build_signature($signature_method, $consumer, $token) {
         $signature = $signature_method->build_signature($this, $consumer, $token);
         return $signature;
     }
     
     /**
-     * util function: current timestamp
+     * til function: current timestamp
+     * 
+     * @return number
      */
     private static function generate_timestamp() {
         return time();
@@ -259,6 +376,8 @@ class OAuthRequest
     
     /**
      * util function: current nonce
+     * 
+     * @return string
      */
     private static function generate_nonce() {
         $mt = microtime();

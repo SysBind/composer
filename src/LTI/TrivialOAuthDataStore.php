@@ -1,20 +1,35 @@
 <?php
+/**
+ * SysBind LTI provider (http://sysbind.co.il/)
+ *
+ * @link      https://github.com/SysBind/composer for the canonical source repository
+ */
 namespace LTI;
 
 use LTI\oauth\OAuthDataStore;
 use LTI\oauth\OAuthConsumer;
 use LTI\oauth\OAuthToken;
 
-
+/**
+ * Data store object 
+ * 
+ * @author SysBind
+ *
+ */
 class TrivialOAuthDataStore extends OAuthDataStore
 {
-
+    
+    /**
+     * 
+     * @var array array of all consumers
+     */
     private $consumers = array();
 
     /**
+     * add a consumer
      * 
-     * @param unknown $consumer_key
-     * @param unknown $consumer_secret
+     * @param string $consumer_key
+     * @param string $consumer_secret
      */
     public function add_consumer($consumer_key, $consumer_secret)
     {
@@ -22,6 +37,10 @@ class TrivialOAuthDataStore extends OAuthDataStore
     }
 
     /**
+     * Search for consumer based on his key
+     * 
+     * @param string $consumer_key
+     *  
      * (non-PHPdoc)
      * @see \LTI\oauth\OAuthDataStore::lookup_consumer()
      */
@@ -39,6 +58,12 @@ class TrivialOAuthDataStore extends OAuthDataStore
     }
 
     /**
+     * Search a tokn for a consumer 
+     * 
+     * @param OAuthConsumer $consumer
+     * @param string $token_type
+     * @param OAuthToken $token
+     * 
      * (non-PHPdoc)
      * @see \LTI\oauth\OAuthDataStore::lookup_token()
      */
@@ -53,6 +78,11 @@ class TrivialOAuthDataStore extends OAuthDataStore
      * Return NULL if the nonce has not been used
      * Return $nonce if the nonce was previously used
      * 
+     * @param OAuthConsumer $consumer
+     * @param OAuthToken $token
+     * @param string $nonce
+     * @param int|string $timestamp
+     * 
      * (non-PHPdoc)
      * @see \LTI\oauth\OAuthDataStore::lookup_nonce()
      */
@@ -65,6 +95,10 @@ class TrivialOAuthDataStore extends OAuthDataStore
     }
 
     /**
+     * Generate new request token
+     * 
+     * @param OAuthConsumer $consumer
+     * 
      * (non-PHPdoc)
      * @see \LTI\oauth\OAuthDataStore::new_request_token()
      */
@@ -74,6 +108,11 @@ class TrivialOAuthDataStore extends OAuthDataStore
     }
 
     /**
+     * generate new access token
+     * 
+     * @param OAuthToken $token
+     * @param OAuthConsumer $consumer
+     * 
      * (non-PHPdoc)
      * @see \LTI\oauth\OAuthDataStore::new_access_token()
      */

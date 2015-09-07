@@ -1,27 +1,75 @@
 <?php
+/**
+ * SysBind LTI provider (http://sysbind.co.il/)
+ *
+ * @link      https://github.com/SysBind/composer for the canonical source repository
+ */
+ 
 namespace LTI;
 
 use LTI\oauth\OAuthServer;
 use LTI\oauth\OAuthSignatureMethod_HMAC_SHA1;
 use LTI\oauth\OAuthRequest;
 
+/**
+ * LTI provider version 1.1.1
+ * 
+ * @author Sysbind
+ *
+ */
 class BLTI
 {
 
+    /**
+     * 
+     * @var boolean flag about reauest validation
+     */
     public $valid = false;
 
+    /**
+     * 
+     * @var boolean is the request completed
+     */
     public $complete = false;
 
+    /**
+     * 
+     * @var string|false Message that can be return or display
+     */
     public $message = false;
 
+    /**
+     * 
+     * @var string|false string represnt the lti request
+     */
     public $basestring = false;
 
+    /**
+     * 
+     * @var array|false array contain all the data collect from the lti consumer request
+     */
     public $info = false;
 
+    /**
+     * 
+     * @var array|false row data about the consumer
+     */
     public $row = false;
 
+    /**
+     * 
+     * @var int|false the request context id
+     */
     public $context_id = false;
- // Override context_id
+    
+    /**
+     * Constructor
+     * 
+     * @param string $parm
+     * @param string $usesession
+     * @param string $doredirect
+     * @param \PDO $pdo
+     */
     function __construct($parm = false, $usesession = true, $doredirect = true, \PDO $pdo)
     {
         // If this request is not an LTI Launch, either
@@ -142,6 +190,12 @@ class BLTI
         }
     }
     
+    /**
+     * Check if the request is lti request
+     * 
+     * Retrun true if the request is basic lti request
+     * @return boolean
+     */
     protected function is_basic_lti_request() {
         $good_message_type = (isset($_REQUEST["lti_message_type"]) && ($_REQUEST["lti_message_type"] == "basic-lti-launch-request"));
         $good_lti_version = (isset($_REQUEST["lti_message_type"]) && ($_REQUEST["lti_version"] == "LTI-1p0"));
@@ -149,7 +203,16 @@ class BLTI
         if ($good_message_type and $good_lti_version and isset($resource_link_id) ) return(true);
         return false;
     }
-    function addSession($location) {
+    
+    /**
+     * Return session name anfd number
+     * 
+     * check if there is session data in cookies
+     * 
+     * @param string $location
+     * @return string
+     */
+    public function addSession($location) {
         if ( ini_get('session.use_cookies') == 0 ) {
             if ( strpos($location,'?') > 0 ) {
                 $location = $location . '&';
@@ -161,7 +224,12 @@ class BLTI
         return $location;
     }
     
-    function isInstructor() {
+    /**
+     * Check if the user has role instructor or admin in the LTI consumer
+     * 
+     * @return boolean
+     */
+    public function isInstructor() {
         $roles = $this->info['roles'];
         $roles = strtolower($roles);
         if ( ! ( strpos($roles,"instructor") === false ) ) return true;
@@ -169,7 +237,12 @@ class BLTI
         return false;
     }
     
-    function getUserEmail() {
+    /**
+     * Return the consumer user Email
+     * 
+     * @return string|boolean
+     */
+    public function getUserEmail() {
         $email = $this->info['lis_person_contact_email_primary'];
         if ( strlen($email) > 0 ) return $email;
         # Sakai Hack
@@ -178,7 +251,12 @@ class BLTI
         return false;
     }
     
-    function getUserShortName() {
+    /**
+     * Return user shortname
+     * 
+     * @return string|false
+     */
+    public function getUserShortName() {
         $email = $this->getUserEmail();
         $givenname = $this->info['lis_person_name_given'];
         $familyname = $this->info['lis_person_name_family'];
@@ -189,25 +267,40 @@ class BLTI
         return $this->getUserName();
     }
     
-    function getUserName() {
+    /**
+     * Return the user name
+     * 
+     * @return string|false
+     */
+    public function getUserName() {
         $givenname = $this->info['lis_person_name_given'];
         $familyname = $this->info['lis_person_name_family'];
         $fullname = $this->info['lis_person_name_full'];
         if ( strlen($fullname) > 0 ) return $fullname;
-        if ( strlen($familyname) > 0 and strlen($givenname) > 0 ) return $givenname + $familyname;
+        if ( strlen($familyname) > 0 and strlen($givenname) > 0 ) return $givenname.$familyname;
         if ( strlen($givenname) > 0 ) return $givenname;
         if ( strlen($familyname) > 0 ) return $familyname;
         return $this->getUserEmail();
     }
     
-    function getUserKey() {
+    /**
+     * Get the consumer key
+     * 
+     * @return string|false
+     */
+    public function getUserKey() {
         $oauth = $this->info['oauth_consumer_key'];
         $id = $this->info['user_id'];
         if ( strlen($id) > 0 and strlen($oauth) > 0 ) return $oauth . ':' . $id;
         return false;
     }
     
-    function getUserImage() {
+    /**
+     * Return a path to the user image
+     * 
+     * @return string
+     */
+    public function getUserImage() {
         $image = isset($this->info['user_image']) ? $this->info['user_image'] : null;
         if ( strlen($image) > 0 ) return $image;
         $email = $this->getUserEmail();
@@ -218,25 +311,45 @@ class BLTI
         return $grav_url;
     }
     
-    function getResourceKey() {
+    /**
+     * Return consumer key
+     * 
+     * @return string|boolean
+     */
+    public function getResourceKey() {
         $oauth = $this->info['oauth_consumer_key'];
         $id = $this->info['resource_link_id'];
         if ( strlen($id) > 0 and strlen($oauth) > 0 ) return $oauth . ':' . $id;
         return false;
     }
     
-    function getResourceTitle() {
+    /**
+     * Return resource link title if exist
+     * 
+     * @return string|boolean
+     */
+    public function getResourceTitle() {
         $title = $this->info['resource_link_title'];
         if ( strlen($title) > 0 ) return $title;
         return false;
     }
     
-    function getConsumerKey() {
+    /**
+     * Return the consumer key
+     * 
+     * @return string|null
+     */
+    public function getConsumerKey() {
         $oauth = $this->info['oauth_consumer_key'];
         return $oauth;
     }
     
-    function getCourseKey() {
+    /**
+     * Return the course key
+     * 
+     * @return Ambigous <int, false>|string|boolean
+     */
+    public function getCourseKey() {
         if ( $this->context_id ) return $this->context_id;
         $oauth = $this->info['oauth_consumer_key'];
         $id = $this->info['context_id'];
@@ -244,7 +357,12 @@ class BLTI
         return false;
     }
     
-    function getCourseName() {
+    /**
+     * Return the course name
+     * 
+     * @return Ambigous <array, false>|boolean
+     */
+    public function getCourseName() {
         $label = $this->info['context_label'];
         $title = $this->info['context_title'];
         $id = $this->info['context_id'];
@@ -254,8 +372,10 @@ class BLTI
         return false;
     }
     
-    // TODO: Add javasript version if headers are already sent
-    function redirect() {
+    /**
+     *  redirect the user
+     */
+    public function redirect() {
         $host = $_SERVER['HTTP_HOST'];
         $uri = $_SERVER['PHP_SELF'];
         $location = isset($_SERVER['HTTPS']) ? 'https://' : 'http://';
@@ -264,7 +384,12 @@ class BLTI
         header("Location: $location");
     }
     
-    function dump() {
+    /**
+     * Return string that show all the data crom the lti request
+     * 
+     * @return string
+     */
+    public function dump() {
         if ( ! $this->valid or $this->info == false ) return "Context not valid\n";
         $ret = "";
         if ( $this->isInstructor() ) {

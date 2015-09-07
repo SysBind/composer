@@ -1,32 +1,71 @@
 <?php
+/**
+ * SysBind LTI provider (http://sysbind.co.il/)
+ *
+ * @link      https://github.com/SysBind/composer for the canonical source repository
+ */
 namespace LTI\oauth;
 
+/**
+ * Class to manage the OAuth server
+ * 
+ * @author SysBind
+ *
+ */
 class OAuthServer
 {
-
+    /**
+     * 
+     * @var int $timestamp_threshold in seconds, five minutes
+     */
     protected $timestamp_threshold = 300;
- // in seconds, five minutes
+
+    /**
+     * 
+     * @var float $version OAuth server version
+     */
     protected $version = 1.0;
- // hi blaine
+ 
+    /**
+     * 
+     * @var array $signature_methods array contain the encode methods of the signature
+     */
     protected $signature_methods = array();
 
+    /**
+     * 
+     * @var OAuthDataStore $data_store the data store object
+     */
     protected $data_store;
 
+    
+    /**
+     * Constructor
+     * 
+     * @param OAuthDataStore $data_store the data store object
+     */
     function __construct($data_store)
     {
         $this->data_store = $data_store;
     }
 
+    /**
+     * add signature encode to the OAuth Server check
+     * 
+     * @param OAuthSignatureMethod $signature_method
+     */
     public function add_signature_method($signature_method)
     {
         $this->signature_methods[$signature_method->get_name()] = $signature_method;
     }
     
-    // high level functions
-    
+
     /**
      * process a request_token request
      * returns the request token on success
+     * 
+     * @param OAuthRequest $request
+     * @return unknown
      */
     public function fetch_request_token(&$request)
     {
@@ -47,6 +86,9 @@ class OAuthServer
     /**
      * process an access_token request
      * returns the access token on success
+     * 
+     * @param OAuthRequest $request
+     * @return unknown
      */
     public function fetch_access_token(&$request)
     {
@@ -66,6 +108,9 @@ class OAuthServer
 
     /**
      * verify an api call, checks all the parameters
+     * 
+     * @param unknown $request
+     * @return multitype:\LTI\oauth\unknown Ambigous <boolean, unknown>
      */
     public function verify_request(&$request)
     {
@@ -81,9 +126,12 @@ class OAuthServer
         );
     }
     
-    // Internals from here
     /**
-     * version 1
+     * Return the OAuth sever version
+     * 
+     * @param OAuthRequest $request
+     * @throws OAuthException
+     * @return number
      */
     private function get_version(&$request)
     {
@@ -97,8 +145,13 @@ class OAuthServer
         return $version;
     }
 
+
     /**
      * figure out the signature with some defaults
+     * 
+     * @param OAuthRequest $request
+     * @throws OAuthException
+     * @return array
      */
     private function get_signature_method(&$request)
     {
@@ -114,6 +167,10 @@ class OAuthServer
 
     /**
      * try to find the consumer for the provided request's consumer key
+     * 
+     * @param OAuthRequest $request
+     * @throws OAuthException
+     * @return unknown
      */
     private function get_consumer(&$request)
     {
@@ -130,8 +187,15 @@ class OAuthServer
         return $consumer;
     }
 
+
     /**
      * try to find the token for the provided request's token key
+     * 
+     * @param OAuthRequest $request
+     * @param OAuthConsumer $consumer
+     * @param string $token_type
+     * @throws OAuthException
+     * @return boolean|unknown
      */
     private function get_token(&$request, $consumer, $token_type = "access")
     {
@@ -148,6 +212,11 @@ class OAuthServer
     /**
      * all-in-one function to check the signature on a request
      * should guess the signature method appropriately
+     * 
+     * @param OAuthRequest $request
+     * @param OAuthConsumer $consumer
+     * @param OAuthToken $token
+     * @throws OAuthException
      */
     private function check_signature(&$request, $consumer, $token)
     {
@@ -177,6 +246,9 @@ class OAuthServer
 
     /**
      * check that the timestamp is new enough
+     * 
+     * @param string|int $timestamp
+     * @throws OAuthException
      */
     private function check_timestamp($timestamp)
     {
@@ -187,8 +259,15 @@ class OAuthServer
         }
     }
 
+
     /**
      * check that the nonce is not repeated
+     * 
+     * @param OAuthConsumer $consumer
+     * @param OAuthToken $token
+     * @param string $nonce
+     * @param string|int $timestamp
+     * @throws OAuthException
      */
     private function check_nonce($consumer, $token, $nonce, $timestamp)
     {

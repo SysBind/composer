@@ -1,9 +1,28 @@
 <?php
+/**
+ * SysBind LTI provider (http://sysbind.co.il/)
+ *
+ * @link      https://github.com/SysBind/composer for the canonical source repository
+ */
 namespace LTI\oauth;
 
+/**
+ * Utility class for OAuth
+ * 
+ * @author SysBind
+ *
+ */
 class OAuthUtil
 {
 
+    /**
+     * encode string for url rfc3986
+     * 
+     * @link https://www.ietf.org/rfc/rfc3986.txt
+     * 
+     * @param string $input
+     * @return multitype:|string
+     */
     public static function urlencode_rfc3986($input)
     {
         if (is_array($input)) {
@@ -19,17 +38,28 @@ class OAuthUtil
             }
     }
     
-    // This decode function isn't taking into consideration the above
-    // modifications to the encoding process. However, this method doesn't
-    // seem to be used anywhere so leaving it as is.
+    /**
+     * This decode function isn't taking into consideration the above
+     * modifications to the encoding process. However, this method doesn't
+     * seem to be used anywhere so leaving it as is.
+     * 
+     * @param string $string
+     * @return string
+     */
     public static function urldecode_rfc3986($string)
     {
         return urldecode($string);
     }
     
-    // Utility function for turning the Authorization: header into
-    // parameters, has to do some unescaping
-    // Can filter out any non-oauth parameters if needed (default behaviour)
+    /**
+     * Utility function for turning the Authorization: header into
+     * parameters, has to do some unescaping
+     * Can filter out any non-oauth parameters if needed (default behaviour)
+     * 
+     * @param string $header
+     * @param string $only_allow_oauth_parameters
+     * @return multitype:string
+     */
     public static function split_header($header, $only_allow_oauth_parameters = true)
     {
         $pattern = '/(([-_a-z]*)=("([^"]*)"|([^,]*)),?)/';
@@ -52,7 +82,12 @@ class OAuthUtil
         return $params;
     }
     
-    // helper to try to sort out headers for people who aren't running apache
+    
+    /**
+     * get the request header
+     * 
+     * @return multitype:array
+     */
     public static function get_headers()
     {
         if (function_exists('apache_request_headers')) {
@@ -75,9 +110,14 @@ class OAuthUtil
         return $out;
     }
     
-    // This function takes a input like a=b&a=c&d=e and returns the parsed
-    // parameters like this
-    // array('a' => array('b','c'), 'd' => 'e')
+    /**
+     * This function takes a input like a=b&a=c&d=e and returns the parsed
+     * parameters like this
+     * array('a' => array('b','c'), 'd' => 'e')
+     * 
+     * @param string $input
+     * @return multitype:|multitype:multitype:Ambigous <multitype:>  string
+     */
     public static function parse_parameters($input)
     {
         if (! isset($input) || ! $input)
@@ -111,6 +151,12 @@ class OAuthUtil
         return $parsed_parameters;
     }
 
+    /**
+     * build http query 
+     * 
+     * @param array $params
+     * @return string
+     */
     public static function build_http_query($params)
     {
         if (! $params)
