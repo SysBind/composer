@@ -230,7 +230,7 @@ class BLTI
      * @return boolean
      */
     public function isInstructor() {
-        $roles = $this->info['roles'];
+        $roles = isset($this->info['roles']) ? $this->info['roles'] : null;
         $roles = strtolower($roles);
         if ( ! ( strpos($roles,"instructor") === false ) ) return true;
         if ( ! ( strpos($roles,"administrator") === false ) ) return true;
